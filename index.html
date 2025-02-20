@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Energía Solar</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <header>
+        <h1>Calculadora de Proyecto Solar</h1>
+    </header>
+
+    <main>
+        <section>
+            <h2>Ubicación</h2>
+            <button onclick="obtenerUbicacion()">Obtener Ubicación</button>
+            <p id="ubicacion">Ubicación no detectada</p>
+        </section>
+
+        <section>
+            <h2>Datos del Sistema</h2>
+            <label for="capacidad">Capacidad del Sistema (kW):</label>
+            <input type="number" id="capacidad" min="1" step="0.1" value="5">
+
+            <label for="demandaDiaria">Demanda Energética Diaria (kWh):</label>
+            <input type="number" id="demandaDiaria" min="1" step="0.1" value="20">
+
+            <label for="tarifaElectricidad">Tarifa de Electricidad ($/kWh):</label>
+            <input type="number" id="tarifaElectricidad" min="0.01" step="0.01" value="0.12">
+
+            <button onclick="calcularPotencialSolar()">Calcular</button>
+        </section>
+
+        <section>
+            <h2>Resultados de Generación Solar</h2>
+            <canvas id="graficoSolar"></canvas>
+        </section>
+
+        <section id="ahorros">
+            <h2>Ahorros y Retorno de Inversión</h2>
+            <p>Los resultados aparecerán aquí después del cálculo.</p>
+        </section>
+
+        <section id="especificaciones">
+            <h2>Especificaciones del Sistema</h2>
+            <p>Los detalles del sistema se mostrarán aquí después del cálculo.</p>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Calculadora Solar</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
+
