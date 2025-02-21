@@ -20,7 +20,7 @@ function obtenerUbicacion() {
 }
 
 function obtenerRadiacionSolar(lat, lon) {
-    let apiKey = "TU_API_KEY";
+    let apiKey = "wgXhSAQTTg1UHYaxZ5P4KneLK6IUgs3Cd9JsdWF8";
     let url = `https://developer.nrel.gov/api/pvwatts/v6.json?api_key=${apiKey}&lat=${lat}&lon=${lon}&system_capacity=1&module_type=1&losses=14&array_type=1&tilt=20&azimuth=180`;
     
     fetch(url)
