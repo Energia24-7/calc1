@@ -29,25 +29,35 @@ document.addEventListener("DOMContentLoaded", function() {
         cargarMapa(lat, lon);
     }
 
-    function calcularPotencialSolar() {
-        if (!coordenadas) {
-            alert("Por favor selecciona una ubicación.");
-            return;
-        }
-
-        const url = `https://developer.nrel.gov/api/pvwatts/v8.json?api_key=${apiKey}&lat=${coordenadas.lat}&lon=${coordenadas.lon}&system_capacity=${document.getElementById("capacidad").value}`;
-
-        fetch(url)
-            .then(response => response.json())
-            .then(data => {
-                if (data.errors) {
-                    console.error("Errores en la API:", data.errors);
-                    return;
-                }
-                mostrarResultados(data);
-            })
-            .catch(error => console.error("Error en la API:", error));
+function calcularPotencialSolar() {
+    if (!coordenadas) {
+        alert("Por favor selecciona una ubicación.");
+        return;
     }
+
+    const apiKey = "wgXhSAQTTg1UHYaxZ5P4KneLK6IUgs3Cd9JsdWF8";
+    const lat = coordenadas.lat;
+    const lon = coordenadas.lon;
+    const system_capacity = document.getElementById("capacidad").value;
+    const azimuth = 180; // Debes obtener este valor de algún input o calcularlo
+    const tilt = 30; // Debes obtener este valor de algún input o calcularlo
+    const array_type = 1; // Este es un valor de ejemplo, debes ajustar según sea necesario
+    const module_type = 1; // Este es un valor de ejemplo, debes ajustar según sea necesario
+    const losses = 10; // Este es un valor de ejemplo, debes ajustar según sea necesario
+
+    const url = `https://developer.nrel.gov/api/pvwatts/v8.json?api_key=${apiKey}&lat=${lat}&lon=${lon}&system_capacity=${system_capacity}&azimuth=${azimuth}&tilt=${tilt}&array_type=${array_type}&module_type=${module_type}&losses=${losses}`;
+
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            if (data.errors) {
+                console.error("Errores en la API:", data.errors);
+                return;
+            }
+            mostrarResultados(data);
+        })
+        .catch(error => console.error("Error en la API:", error));
+}
 
     function mostrarResultados(data) {
         const radiacion = Math.round(data.outputs.solrad_annual);
