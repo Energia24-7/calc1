@@ -1,40 +1,61 @@
-// script.js
-
 document.addEventListener("DOMContentLoaded", function() {
-    obtenerUbicacion();
-});
+    const apiKey = "wgXhSAQTTg1UHYaxZ5P4KneLK6IUgs3Cd9JsdWF8";
+    const usarUbicacionBtn = document.getElementById("usarUbicacion");
+    const ciudadesSelect = document.getElementById("ciudades");
+    let coordenadas = null;
 
-function obtenerUbicacion() {
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(posicion => {
-            let latitud = posicion.coords.latitude;
-            let longitud = posicion.coords.longitude;
-            document.getElementById("ubicacion").innerHTML = `Latitud: ${latitud}, Longitud: ${longitud}`;
-            obtenerRadiacionSolar(latitud, longitud);
-        }, () => {
-            document.getElementById("ubicacion").innerHTML = "Ubicación no disponible";
-        });
-    } else {
-        document.getElementById("ubicacion").innerHTML = "Geolocalización no soportada";
+    usarUbicacionBtn.addEventListener("click", function() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(position => {
+                coordenadas = {
+                    lat: position.coords.latitude,
+                    lon: position.coords.longitude
+                };
+                actualizarUbicacion(coordenadas);
+            }, () => alert("No se pudo obtener la ubicación"));
+        }
+    });
+
+    ciudadesSelect.addEventListener("change", function() {
+        if (this.value) {
+            const [lat, lon] = this.value.split(",").map(Number);
+            coordenadas = { lat, lon };
+            actualizarUbicacion(coordenadas);
+        }
+    });
+
+    function actualizarUbicacion({ lat, lon }) {
+        document.getElementById("ubicacion").textContent = `Ubicación: ${lat.toFixed(4)}, ${lon.toFixed(4)}`;
+        cargarMapa(lat, lon);
     }
-}
 
-function obtenerRadiacionSolar(lat, lon) {
-    let apiKey = "wgXhSAQTTg1UHYaxZ5P4KneLK6IUgs3Cd9JsdWF8";
-    let url = `https://developer.nrel.gov/api/pvwatts/v6.json?api_key=${apiKey}&lat=${lat}&lon=${lon}&system_capacity=1&module_type=1&losses=14&array_type=1&tilt=20&azimuth=180`;
-    
-    fetch(url)
-        .then(response => response.json())
-        .then(data => {
-            if (data.outputs && data.outputs.solrad_monthly) {
-                let radiacionDiaria = data.outputs.solrad_monthly.reduce((a, b) => a + b, 0) / 12;
-                document.getElementById("radiacion").innerHTML = `Radiación Solar Promedio: ${radiacionDiaria.toFixed(2)} kWh/m²/día`;
-                calcularPotencialSolar(radiacionDiaria);
-            }
-        })
-        .catch(error => console.error("Error obteniendo datos de PVWatts: ", error));
-}
+    function calcularPotencialSolar() {
+        if (!coordenadas) {
+            alert("Por favor selecciona una ubicación.");
+            return;
+        }
 
+        const url = `https://developer.nrel.gov/api/pvwatts/v8.json?api_key=${apiKey}&lat=${coordenadas.lat}&lon=${coordenadas.lon}&system_capacity=${document.getElementById("capacidad").value}&module_type=0&losses=14&array_type=1&tilt=20&azimuth=180`;
+
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                if (data.errors) {
+                    console.error("Errores en la API:", data.errors);
+                    return;
+                }
+                mostrarResultados(data);
+            })
+            .catch(error => console.error("Error en la API:", error));
+    }
+
+    function mostrarResultados(data) {
+        const radiacion = Math.round(data.outputs.solrad_annual);
+        document.getElementById("radiacion").textContent = `Radiación Solar: ${radiacion} kWh/m²/año`;
+
+        const generacionMensual = data.outputs.ac_monthly;
+        mostrarGrafico(generacionMensual);
+    }
 function calcularPotencialSolar(radiacionDiaria) {
     let capacidad = parseFloat(document.getElementById("capacidad").value);
     let demandaDiaria = parseFloat(document.getElementById("demandaDiaria").value);
@@ -71,17 +92,24 @@ function calcularPotencialSolar(radiacionDiaria) {
     actualizarGrafico(produccionMensual);
 }
 
-function actualizarGrafico(produccionMensual) {
-    let ctx = document.getElementById("graficoSolar").getContext("2d");
-    let grafico = new Chart(ctx, {
-        type: "bar",
-        data: {
-            labels: ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"],
-            datasets: [{
-                label: "Producción Mensual (kWh)",
-                data: Array(12).fill(produccionMensual),
-                backgroundColor: "rgba(54, 162, 235, 0.6)"
-            }]
-        }
-    });
-}
+  
+    function mostrarGrafico(datos) {
+        const ctx = document.getElementById("graficoSolar").getContext("2d");
+        new Chart(ctx, {
+            type: "bar",
+            data: {
+                labels: ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"],
+                datasets: [{
+                    label: "Generación mensual (kWh)",
+                    data: datos,
+                    backgroundColor: "rgba(75, 192, 192, 0.5)"
+                }]
+            }
+        });
+    }
+
+    function cargarMapa(lat, lon) {
+        const mapa = document.getElementById("mapa");
+        mapa.innerHTML = `<iframe width="600" height="400" src="https://maps.google.com/maps?q=${lat},${lon}&z=10&output=embed"></iframe>`;
+    }
+});
