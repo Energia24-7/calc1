@@ -28,55 +28,55 @@ document.addEventListener("DOMContentLoaded", function() {
         document.getElementById("ubicacion").textContent = `Ubicación: ${lat.toFixed(4)}, ${lon.toFixed(4)}`;
         cargarMapa(lat, lon);
     }
-    
-    // Removed calcularPotencialSolar definition from here
-});
 
-// Moved calcularPotencialSolar definition here
-function calcularPotencialSolar() {
-    if (!coordenadas) {
-        alert("Por favor selecciona una ubicación.");
-        return;
+    function calcularPotencialSolar() {
+        if (!coordenadas) {
+            alert("Por favor selecciona una ubicación.");
+            return;
+        }
+
+        const url = `https://developer.nrel.gov/api/pvwatts/v8.json?api_key=${apiKey}&lat=${coordenadas.lat}&lon=${coordenadas.lon}&system_capacity=${document.getElementById("capacidad").value}`;
+
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                if (data.errors) {
+                    console.error("Errores en la API:", data.errors);
+                    return;
+                }
+                mostrarResultados(data);
+            })
+            .catch(error => console.error("Error en la API:", error));
     }
 
-    const url = `https://developer.nrel.gov/api/pvwatts/v8.json?api_key=${apiKey}&lat=${coordenadas.lat}&lon=${coordenadas.lon}&system_capacity=${document.getElementById("capacidad").value}`;
+    function mostrarResultados(data) {
+        const radiacion = Math.round(data.outputs.solrad_annual);
+        document.getElementById("radiacion").textContent = `Radiación Solar: ${radiacion} kWh/m²/año`;
 
-    fetch(url)
-        .then(response => response.json())
-        .then(data => {
-            if (data.errors) {
-                console.error("Errores en la API:", data.errors);
-                return;
+        const generacionMensual = data.outputs.ac_monthly;
+        mostrarGrafico(generacionMensual);
+    }
+
+    function mostrarGrafico(datos) {
+        const ctx = document.getElementById("graficoSolar").getContext("2d");
+        new Chart(ctx, {
+            type: "bar",
+            data: {
+                labels: ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"],
+                datasets: [{
+                    label: "Generación mensual (kWh)",
+                    data: datos,
+                    backgroundColor: "rgba(75, 192, 192, 0.5)"
+                }]
             }
-            mostrarResultados(data);
-        })
-        .catch(error => console.error("Error en la API:", error));
-}
+        });
+    }
 
-function mostrarResultados(data) {
-    const radiacion = Math.round(data.outputs.solrad_annual);
-    document.getElementById("radiacion").textContent = `Radiación Solar: ${radiacion} kWh/m²/año`;
+    function cargarMapa(lat, lon) {
+        const mapa = document.getElementById("mapa");
+        mapa.innerHTML = `<iframe width="600" height="400" src="https://maps.google.com/maps?q=${lat},${lon}&z=10&output=embed"></iframe>`;
+    }
 
-    const generacionMensual = data.outputs.ac_monthly;
-    mostrarGrafico(generacionMensual);
-}
-
-function mostrarGrafico(datos) {
-    const ctx = document.getElementById("graficoSolar").getContext("2d");
-    new Chart(ctx, {
-        type: "bar",
-        data: {
-            labels: ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"],
-            datasets: [{
-                label: "Generación mensual (kWh)",
-                data: datos,
-                backgroundColor: "rgba(75, 192, 192, 0.5)"
-            }]
-        }
-    });
-}
-
-function cargarMapa(lat, lon) {
-    const mapa = document.getElementById("mapa");
-    mapa.innerHTML = `<iframe width="600" height="400" src="https://maps.google.com/maps?q=${lat},${lon}&z=10&output=embed"></iframe>`;
-}
+    // Make calcularPotencialSolar accessible in the global scope
+    window.calcularPotencialSolar = calcularPotencialSolar;
+});
