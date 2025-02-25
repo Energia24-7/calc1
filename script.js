@@ -159,7 +159,6 @@ function calculateSavings(monthlyGeneration, electricityRate, avgMonthlyGenerati
         <h3>Resumen Financiero</h3>
         <p>Producción de Energía Anual: ${annualGeneration.toFixed(2)} kWh</p>
         <p>Ahorro Anual: $${annualSavings.toFixed(2)}</p>
-        <p>Costo Estimado del Sistema: $${systemCost.toFixed(2)}</p>
         <p>ROI: ${roi.toFixed(2)}%</p>
         <p>Periodo de Recuperación: ${paybackYears.toFixed(1)} años</p>
     `;
