@@ -67,52 +67,11 @@
         <div id="avgMonthlyGeneration"></div>
         <div id="installationCost"></div>
         <div id="map" style="width: 100%; height: 400px; margin-top: 20px;"></div>
-        
-<div class="container">
-  <h1>Para recibir una cotización contactar a</h1>
-  <form target="_blank" action="https://formsubmit.co/el/fivune" method="POST">
-    <div class="form-group">
-      <div class="form-row">
-        <div class="col">
-          <input type="text" name="name" class="form-control" placeholder="Nombre completo" required>
-        </div>
-        <div class="col">
-          <input type="email" name="email" class="form-control" placeholder="Email Address" required>
-        </div>
-      </div>
-    </div>
-    <div class="form-group">
-      <textarea placeholder="Mensaje" class="form-control" name="Mensaje" rows="5" required></textarea>
-    </div>
-    <button type="submit" class="btn btn-lg btn-dark btn-block">Submit Form</button>
-  </form>
-</div>
-    
+            
     <footer>
         <p>&copy; <span id="currentYear"></span> Energía 24/7 - Contacto: 0998879869</p>
     </footer>
-    
-    <script>
-        document.getElementById("currentYear").innerText = new Date().getFullYear();
-        
-        document.getElementById("quoteForm").addEventListener("submit", function(event) {
-            event.preventDefault();
-            
-            let form = event.target;
-            let formData = new FormData(form);
-            
-            fetch(form.action, {
-                method: "POST",
-                body: formData
-            })
-            .then(response => response.ok ? response.text() : Promise.reject("Error"))
-            .then(() => {
-                document.getElementById("successMessage").style.display = "block";
-                form.reset();
-            })
-            .catch(error => alert("Error al enviar la solicitud. Intente de nuevo."));
-        });
-    </script>
-    <script src="script.js"></script>
+    <button onclick="window.location.href='https://formsubmit.co/el/fivune'">Pedir cotización</button>
+     <script src="script.js"></script>
 </body>
 </html>
