@@ -1,5 +1,5 @@
 <?php
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $contactInfo = trim($_POST["contactInfo"]);
 
     if (!empty($contactInfo)) {
@@ -14,9 +14,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             echo "error";
         }
     } else {
-        echo "Por favor, ingrese su información de contacto.";
+        echo "error";
     }
 } else {
-    echo "Acceso no permitido.";
+    http_response_code(405); // Method Not Allowed
+    echo "Método no permitido.";
 }
 ?>
