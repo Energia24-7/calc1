@@ -110,7 +110,7 @@ function getSolarPotential() {
                 let monthlyGeneration = data.outputs.ac_monthly;
                 let avgMonthlyGeneration = monthlyGeneration.reduce((a, b) => a + b, 0) / 12;
                 updateChart(monthlyGeneration);
-                calculateSavings(monthlyGeneration, electricityRate, avgMonthlyGeneration);
+                calculateSavings(monthlyGeneration, electricityRate, avgMonthlyGeneration, systemCapacity, batteryBackup);
                 calculateInstallationCost(systemCapacity, batteryBackup, panelSize);
             }
         })
