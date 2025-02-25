@@ -1,48 +1,72 @@
-<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calculadora Solar</title>
+    <title>Calculadora de Presupuesto de Energía Solar</title>
+    <link rel="stylesheet" href="styles.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="style.css">
-    <script src="script.js" defer></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 </head>
 <body>
-    <h1>Calculadora de Energía Solar</h1>
-    
-    <div>
-        <button id="usarUbicacion">Usar mi ubicación</button>
-        <label for="ciudades">O selecciona una ciudad:</label>
-        <select id="ciudades">
-            <option value="">-- Selecciona --</option>
+    <div class="container">
+        <h1>Calculadora de Presupuesto de Energía Solar</h1>
+        <button onclick="getLocation()">Usar mi ubicación</button>
+        <label for="city">O seleccione una ciudad:</label>
+        <select id="city" onchange="setCityLocation()">
+            <option value="">Seleccione una ciudad</option>
             <option value="-0.1807,-78.4678">Quito</option>
             <option value="-2.1894,-79.8891">Guayaquil</option>
-            <option value="-3.2581,-79.9556">Cuenca</option>
-            <option value="-0.253,-79.1714">Santo Domingo</option>
-            <option value="-3.9833,-79.2">Loja</option>
+            <option value="-3.9833,-79.2000">Loja</option>
+            <option value="-1.2417,-78.6197">Ambato</option>
+            <option value="-2.9006,-79.0069">Cuenca</option>
+            <option value="-0.253,-79.1719">Santo Domingo</option>
         </select>
-        <p id="ubicacion">Ubicación no seleccionada</p>
-    </div>
-
-    <div>
-        <label for="capacidad">Capacidad del sistema (kW):</label>
-        <input type="number" id="capacidad" value="5">
         
-        <label for="demandaDiaria">Demanda diaria (kWh):</label>
-        <input type="number" id="demandaDiaria" value="20">
-
-        <label for="tarifaElectricidad">Tarifa de electricidad ($/kWh):</label>
-        <input type="number" id="tarifaElectricidad" value="0.1">
-
-        <button onclick="calcularPotencialSolar()">Calcular</button>
+        <label for="capacity">Capacidad del sistema (kW):</label>
+        <input type="number" id="capacity" value="5" min="1" step="0.5">
+        
+        <label for="panelSize">Seleccione el tamaño del panel solar (W):</label>
+        <select id="panelSize">
+            <option value="350">350W</option>
+            <option value="400">400W</option>
+            <option value="500">500W</option>
+            <option value="550">550W</option>
+        </select>
+        
+        <label for="batteryBackup">¿Requiere respaldo de batería?</label>
+        <select id="batteryBackup">
+            <option value="no">No</option>
+            <option value="yes">Sí</option>
+        </select>
+        
+        <label for="electricityRate">Costo de electricidad por kWh ($):</label>
+        <input type="number" id="electricityRate" value="0.15" step="0.01">
+        <button onclick="getSolarPotential()">Calcular</button>
+        <div id="location"></div>
+        <canvas id="solarChart"></canvas>
+        <div id="savings"></div>
+        <div id="recommendedCapacity"></div>
+        <div id="avgMonthlyGeneration"></div>
+        <div id="installationCost"></div>
+        <div id="map" style="width: 100%; height: 400px; margin-top: 20px;"></div>
+        
+        <div class="contact-section">
+            <h3>Para recibir una cotización formal, ingrese su teléfono o email:</h3>
+            <form id="quoteForm">
+                <input type="text" name="contactInfo" id="contactInfo" placeholder="Teléfono o Email" required>
+                <button type="submit">Solicitar Cotización</button>
+            </form>
+        </div>
     </div>
-
-    <div id="radiacion">Radiación Solar: No disponible</div>
-    <div id="especificaciones"></div>
-    <div id="ahorros"></div>
-    <canvas id="graficoSolar"></canvas>
-    <div id="mapa" style="width: 600px; height: 400px;"></div>
     
+    <footer>
+        <p>&copy; <span id="currentYear"></span> Energía 24/7 - Contacto: 0998879869</p>
+    </footer>
+    
+    <script>
+        document.getElementById("currentYear").innerText = new Date().getFullYear();
+    </script>
+    <script src="script.js"></script>
 </body>
 </html>
