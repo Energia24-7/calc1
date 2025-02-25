@@ -1,92 +1,181 @@
-document.addEventListener("DOMContentLoaded", function() {
-    const apiKey = "wgXhSAQTTg1UHYaxZ5P4KneLK6IUgs3Cd9JsdWF8";
-    const usarUbicacionBtn = document.getElementById("usarUbicacion");
-    const ciudadesSelect = document.getElementById("ciudades");
-    let coordenadas = null;
+let userLocation = { lat: null, lon: null };
+let solarChart;
+let map;
+let marker;
 
-    usarUbicacionBtn.addEventListener("click", function() {
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(position => {
-                coordenadas = {
-                    lat: position.coords.latitude,
-                    lon: position.coords.longitude
-                };
-                actualizarUbicacion(coordenadas);
-            }, () => alert("No se pudo obtener la ubicación"));
+document.addEventListener("DOMContentLoaded", function () {
+    initMap();
+
+    // Handle quote form submission
+    document.getElementById("quoteForm").addEventListener("submit", function (event) {
+        event.preventDefault(); // Prevent default form submission
+
+        let contactInfo = document.getElementById("contactInfo").value;
+
+        if (!contactInfo) {
+            alert("Por favor, ingrese su teléfono o email para recibir la cotización.");
+            return;
         }
-    });
 
-    ciudadesSelect.addEventListener("change", function() {
-        if (this.value) {
-            const [lat, lon] = this.value.split(",").map(Number);
-            coordenadas = { lat, lon };
-            actualizarUbicacion(coordenadas);
-        }
-    });
+        let formData = new FormData();
+        formData.append("contactInfo", contactInfo);
 
-    function actualizarUbicacion({ lat, lon }) {
-        document.getElementById("ubicacion").textContent = `Ubicación: ${lat.toFixed(4)}, ${lon.toFixed(4)}`;
-        cargarMapa(lat, lon);
+        fetch("send_quote.php", {
+            method: "POST",
+            body: formData,
+        })
+        .then(response => response.text())
+        .then(data => {
+            if (data.trim() === "success") {
+                alert("Solicitud enviada con éxito. Nos pondremos en contacto pronto.");
+                document.getElementById("contactInfo").value = "";
+            } else {
+                alert("Error al enviar la solicitud. Intente de nuevo.");
+            }
+        })
+        .catch(error => {
+            alert("Error en la conexión. Verifique su conexión a Internet.");
+            console.error("Error:", error);
+        });
+    });
+});
+
+function initMap() {
+    map = L.map('map').setView([0, 0], 2);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+}
+
+function getLocation() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(position => {
+            userLocation.lat = position.coords.latitude;
+            userLocation.lon = position.coords.longitude;
+            document.getElementById("location").innerHTML = `Ubicación: ${userLocation.lat.toFixed(4)}, ${userLocation.lon.toFixed(4)}`;
+            updateMap(userLocation.lat, userLocation.lon);
+        }, error => {
+            document.getElementById("location").innerHTML = "Acceso a la ubicación denegado.";
+        });
+    } else {
+        document.getElementById("location").innerHTML = "Geolocalización no soportada.";
     }
+}
 
-function calcularPotencialSolar() {
-    if (!coordenadas) {
-        alert("Por favor selecciona una ubicación.");
+function setCityLocation() {
+    let citySelect = document.getElementById("city");
+    let cityCoords = citySelect.value;
+    if (cityCoords) {
+        let [lat, lon] = cityCoords.split(",").map(Number);
+        userLocation.lat = lat;
+        userLocation.lon = lon;
+        document.getElementById("location").innerHTML = `Ubicación: ${lat.toFixed(4)}, ${lon.toFixed(4)}`;
+        updateMap(lat, lon);
+    }
+}
+
+function updateMap(lat, lon) {
+    map.setView([lat, lon], 12);
+    if (marker) {
+        marker.setLatLng([lat, lon]);
+    } else {
+        marker = L.marker([lat, lon]).addTo(map);
+    }
+}
+
+function getSolarPotential() {
+    if (!userLocation.lat || !userLocation.lon) {
+        document.getElementById("location").innerHTML = "Por favor, habilite los servicios de ubicación o seleccione una ciudad.";
+        return;
+    }
+    const systemCapacity = parseFloat(document.getElementById("capacity").value);
+    const electricityRate = parseFloat(document.getElementById("electricityRate").value);
+    const batteryBackup = document.getElementById("batteryBackup").value;
+    const panelSize = parseInt(document.getElementById("panelSize").value);
+
+    if (systemCapacity <= 0 || electricityRate <= 0) {
+        document.getElementById("savings").innerHTML = "Ingrese valores válidos para la capacidad del sistema y el costo de electricidad.";
         return;
     }
 
-    const apiKey = "wgXhSAQTTg1UHYaxZ5P4KneLK6IUgs3Cd9JsdWF8";
-    const lat = coordenadas.lat;
-    const lon = coordenadas.lon;
-    const system_capacity = document.getElementById("capacidad").value;
-    const azimuth = 180; // Debes obtener este valor de algún input o calcularlo
-    const tilt = 30; // Debes obtener este valor de algún input o calcularlo
-    const array_type = 1; // Este es un valor de ejemplo, debes ajustar según sea necesario
-    const module_type = 1; // Este es un valor de ejemplo, debes ajustar según sea necesario
-    const losses = 10; // Este es un valor de ejemplo, debes ajustar según sea necesario
+    const apiKey = "wgXhSAQTTg1UHYaxZ5P4KneLK6IUgs3Cd9JsdWF8"; // Reemplazar con clave de API válida
+    const apiUrl = `https://developer.nrel.gov/api/pvwatts/v8.json?api_key=${apiKey}&lat=${userLocation.lat}&lon=${userLocation.lon}&system_capacity=${systemCapacity}&module_type=0&losses=14&array_type=1&tilt=20&azimuth=180`;
 
-    const url = `https://developer.nrel.gov/api/pvwatts/v8.json?api_key=${apiKey}&lat=${lat}&lon=${lon}&system_capacity=${system_capacity}&azimuth=${azimuth}&tilt=${tilt}&array_type=${array_type}&module_type=${module_type}&losses=${losses}`;
-
-    fetch(url)
+    fetch(apiUrl)
         .then(response => response.json())
         .then(data => {
-            if (data.errors) {
-                console.error("Errores en la API:", data.errors);
-                return;
+            if (data.errors && data.errors.length > 0) {
+                document.getElementById("savings").innerHTML = "Error en la API: " + data.errors.join(", ");
+            } else {
+                let monthlyGeneration = data.outputs.ac_monthly;
+                let avgMonthlyGeneration = monthlyGeneration.reduce((a, b) => a + b, 0) / 12;
+                updateChart(monthlyGeneration);
+                calculateSavings(monthlyGeneration, electricityRate, avgMonthlyGeneration);
+                calculateInstallationCost(systemCapacity, batteryBackup, panelSize);
             }
-            mostrarResultados(data);
         })
-        .catch(error => console.error("Error en la API:", error));
+        .catch(error => {
+            document.getElementById("savings").innerHTML = "Error en la solicitud a la API.";
+        });
 }
 
-    function mostrarResultados(data) {
-        const radiacion = Math.round(data.outputs.solrad_annual);
-        document.getElementById("radiacion").textContent = `Radiación Solar: ${radiacion} kWh/m²/año`;
-
-        const generacionMensual = data.outputs.ac_monthly;
-        mostrarGrafico(generacionMensual);
+function updateChart(monthlyGeneration) {
+    let months = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+    if (solarChart) {
+        solarChart.destroy();
     }
-
-    function mostrarGrafico(datos) {
-        const ctx = document.getElementById("graficoSolar").getContext("2d");
-        new Chart(ctx, {
-            type: "bar",
-            data: {
-                labels: ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"],
-                datasets: [{
-                    label: "Generación mensual (kWh)",
-                    data: datos,
-                    backgroundColor: "rgba(75, 192, 192, 0.5)"
-                }]
+    let ctx = document.getElementById("solarChart").getContext("2d");
+    solarChart = new Chart(ctx, {
+        type: "bar",
+        data: {
+            labels: months,
+            datasets: [{
+                label: "Producción de Energía Mensual (kWh)",
+                data: monthlyGeneration,
+                backgroundColor: "rgba(40, 167, 69, 0.7)",
+                borderColor: "rgba(40, 167, 69, 1)",
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
             }
-        });
-    }
+        }
+    });
+}
 
-    function cargarMapa(lat, lon) {
-        const mapa = document.getElementById("mapa");
-        mapa.innerHTML = `<iframe width="600" height="400" src="https://maps.google.com/maps?q=${lat},${lon}&z=10&output=embed"></iframe>`;
-    }
+function calculateSavings(monthlyGeneration, electricityRate, avgMonthlyGeneration) {
+    let annualGeneration = monthlyGeneration.reduce((a, b) => a + b, 0);
+    let annualSavings = annualGeneration * electricityRate;
+    let systemCost = document.getElementById("capacity").value * 1000 * 2;
+    let roi = (annualSavings / systemCost) * 100;
+    let paybackYears = systemCost / annualSavings;
 
-    // Make calcularPotencialSolar accessible in the global scope
-    window.calcularPotencialSolar = calcularPotencialSolar;
-});
+    document.getElementById("savings").innerHTML = `
+        <h3>Resumen Financiero</h3>
+        <p>Producción de Energía Anual: ${annualGeneration.toFixed(2)} kWh</p>
+        <p>Ahorro Anual: $${annualSavings.toFixed(2)}</p>
+        <p>Costo Estimado del Sistema: $${systemCost.toFixed(2)}</p>
+        <p>ROI: ${roi.toFixed(2)}%</p>
+        <p>Periodo de Recuperación: ${paybackYears.toFixed(1)} años</p>
+    `;
+    document.getElementById("avgMonthlyGeneration").innerHTML = `
+        <h3>Generación Promedio Mensual</h3>
+        <p>${avgMonthlyGeneration.toFixed(2)} kWh</p>
+    `;
+}
+
+function calculateInstallationCost(systemCapacity, batteryBackup, panelSize) {
+    let installationCost = batteryBackup === "yes" ? systemCapacity * 1400 : systemCapacity * 800;
+    let totalPanels = Math.ceil((systemCapacity * 1000) / panelSize);
+
+    document.getElementById("installationCost").innerHTML = `
+        <h3>Costo de Instalación</h3>
+        <p>${installationCost.toFixed(2)} USD</p>
+        <p>Total de Paneles Requeridos: ${totalPanels}</p>
+    `;
+}
