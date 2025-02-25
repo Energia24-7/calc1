@@ -173,7 +173,7 @@ function calculateInstallationCost(systemCapacity, batteryBackup, panelSize) {
     let totalPanels = Math.ceil((systemCapacity * 1000) / panelSize);
 
     document.getElementById("installationCost").innerHTML = `
-        <h3>Costo de Instalación</h3>
+        <h3>Costo de Instalación aprox sin IVA (requiere inspección)</h3>
         <p>${installationCost.toFixed(2)} USD</p>
         <p>Total de Paneles Requeridos: ${totalPanels}</p>
     `;
