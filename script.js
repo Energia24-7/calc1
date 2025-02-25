@@ -178,3 +178,7 @@ function calculateInstallationCost(systemCapacity, batteryBackup, panelSize) {
         <p>Total de Paneles Requeridos: ${totalPanels}</p>
     `;
 }
+
+function updateTitle(newTitle) {
+    document.title = newTitle;
+}
