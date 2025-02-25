@@ -148,7 +148,7 @@ function updateChart(monthlyGeneration) {
     });
 }
 
-function calculateSavings(monthlyGeneration, electricityRate, avgMonthlyGeneration) {
+function calculateSavings(monthlyGeneration, electricityRate, avgMonthlyGeneration, systemCapacity) {
     let annualGeneration = monthlyGeneration.reduce((a, b) => a + b, 0);
     let annualSavings = annualGeneration * electricityRate;
     let systemCost = batteryBackup === "yes" ? systemCapacity * 1400 : systemCapacity * 800;
