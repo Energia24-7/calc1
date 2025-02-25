@@ -151,7 +151,7 @@ function updateChart(monthlyGeneration) {
 function calculateSavings(monthlyGeneration, electricityRate, avgMonthlyGeneration) {
     let annualGeneration = monthlyGeneration.reduce((a, b) => a + b, 0);
     let annualSavings = annualGeneration * electricityRate;
-    let systemCost = document.getElementById("capacity").value * 1000 * 2;
+    let systemCost = batteryBackup === "yes" ? systemCapacity * 1400 : systemCapacity * 800;
     let roi = (annualSavings / systemCost) * 100;
     let paybackYears = systemCost / annualSavings;
 
