@@ -3,6 +3,13 @@ let solarChart;
 let map;
 let marker;
 
+let panelAreas = {
+    "350": 1.62,
+    "400": 1.8,
+    "500": 2.2,
+    "550": 2.5
+};
+
 document.addEventListener("DOMContentLoaded", function () {
     initMap();
 
@@ -171,12 +178,19 @@ function calculateSavings(monthlyGeneration, electricityRate, avgMonthlyGenerati
 function calculateInstallationCost(systemCapacity, batteryBackup, panelSize) {
     let installationCost = batteryBackup === "yes" ? systemCapacity * 1400 : systemCapacity * 800;
     let totalPanels = Math.ceil((systemCapacity * 1000) / panelSize);
+    let totalArea = totalPanels * panelAreas[panelSize];
 
     document.getElementById("installationCost").innerHTML = `
         <h3>Costo de Instalación aprox sin IVA (requiere inspección)</h3>
         <p>${installationCost.toFixed(2)} USD</p>
         <p>Total de Paneles Requeridos: ${totalPanels}</p>
     `;
+ document.getElementById("panelArea").innerHTML = `
+        <h3>Área Estimada Requerida</h3>
+        <p>${totalArea.toFixed(2)} m²</p>
+    `;
+
+
 }
 
 function updateTitle(newTitle) {
